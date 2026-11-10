@@ -1,0 +1,304 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <title>REGISTRO DE EMOCIONES WRU</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      min-height: 100%;
+    }
+
+    body {
+      min-height: 100vh;
+      background: #000;
+      color: #fff;
+      padding: 20px 20px 0;
+      display: flex;
+      justify-content: center;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 560px;
+      min-height: calc(100vh - 20px);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .app-header {
+      text-align: center;
+      padding: 40px 0 16px;
+      margin-bottom: 18px;
+      border-bottom: 2px solid #fff;
+    }
+
+    h1 {
+      font-size: 25px;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+    }
+
+    .fecha-info {
+      text-align: center;
+      color: #aaa;
+      font-size: 14px;
+      padding: 4px 12px 24px;
+    }
+
+    .fecha-info span {
+      color: #fff;
+      font-weight: 650;
+    }
+
+    .campo {
+      margin-bottom: 22px;
+    }
+
+    label {
+      display: block;
+      margin: 0 0 10px 4px;
+      font-size: 16px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 112px;
+      resize: vertical;
+      padding: 15px;
+      border: 1px solid #383838;
+      border-radius: 14px;
+      background: #090909;
+      color: #fff;
+      font: inherit;
+      font-size: 15px;
+      line-height: 1.5;
+      outline: none;
+    }
+
+    textarea:focus {
+      border-color: #aaa;
+    }
+
+    textarea::placeholder {
+      color: #777;
+    }
+
+    #observacion {
+      min-height: 170px;
+    }
+
+    .btn-wrapper {
+      margin-top: auto;
+      padding: 18px 0 24px;
+    }
+
+    button {
+      width: 100%;
+      padding: 16px;
+      border: 1px solid #fff;
+      border-radius: 40px;
+      background: #fff;
+      color: #000;
+      font-size: 17px;
+      font-weight: 750;
+      letter-spacing: 1px;
+      cursor: pointer;
+      transition: .15s;
+    }
+
+    button:active {
+      transform: scale(.98);
+      background: #ddd;
+    }
+
+    button:disabled {
+      opacity: .55;
+      cursor: wait;
+    }
+
+    .mensaje {
+      display: none;
+      text-align: center;
+      padding: 13px;
+      margin-top: 12px;
+      border-radius: 30px;
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    .mensaje.ok {
+      display: block;
+      background: #0a1a0a;
+      color: #7ee787;
+      border: 1px solid #1a3a1a;
+    }
+
+    .mensaje.error {
+      display: block;
+      background: #1a0a0a;
+      color: #ff7777;
+      border: 1px solid #3a1a1a;
+    }
+  </style>
+</head>
+
+<body>
+
+  <main class="container">
+
+    <header class="app-header">
+      <h1>REGISTRO DE EMOCIONES WRU</h1>
+    </header>
+
+    <div class="fecha-info">
+      Hoy: <span id="fechaDisplay">Cargando...</span>
+    </div>
+
+    <form id="formEmocion">
+
+      <div class="campo">
+        <label for="emocion">Emoción</label>
+        <textarea
+          id="emocion"
+          name="emocion"
+          placeholder="¿Qué emoción estás experimentando?"
+          required
+        ></textarea>
+      </div>
+
+      <div class="campo">
+        <label for="observacion">Observación</label>
+        <textarea
+          id="observacion"
+          name="observacion"
+          placeholder="Escribe aquí lo que quieras observar o expresar sobre esta emoción..."
+        ></textarea>
+      </div>
+
+      <div class="btn-wrapper">
+        <button id="btnGuardar" type="submit">
+          GUARDAR REGISTRO
+        </button>
+
+        <div id="mensaje" class="mensaje" role="status" aria-live="polite"></div>
+      </div>
+
+    </form>
+
+  </main>
+
+  <script>
+
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxUEbAMGrxnZv2RlTWwlTstsgRJIEgDCGWjGL-B9oWZIVVli3OZ785k3vygjku3liDY9Q/exec';
+
+    // FECHA AUTOMÁTICA DE COLOMBIA
+
+    function fechaBogota() {
+      const partes = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'America/Bogota',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      }).formatToParts(new Date());
+
+      const valor = tipo => partes.find(p => p.type === tipo).value;
+
+      return `${valor('year')}-${valor('month')}-${valor('day')}`;
+    }
+
+    function mostrarFecha() {
+      const fecha = new Date(`${fechaBogota()}T12:00:00-05:00`);
+
+      document.getElementById('fechaDisplay').textContent =
+        new Intl.DateTimeFormat('es-CO', {
+          timeZone: 'America/Bogota',
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        }).format(fecha);
+    }
+
+    mostrarFecha();
+
+    // GUARDAR REGISTRO
+
+    document.getElementById('formEmocion').addEventListener('submit', async function (event) {
+
+      event.preventDefault();
+
+      const emocion = document.getElementById('emocion').value.trim();
+      const observacion = document.getElementById('observacion').value.trim();
+
+      const boton = document.getElementById('btnGuardar');
+      const mensaje = document.getElementById('mensaje');
+
+      if (!emocion) {
+        mensaje.className = 'mensaje error';
+        mensaje.textContent = 'Escribe la emoción antes de guardar.';
+        return;
+      }
+
+      const datos = {
+        fecha: fechaBogota(),
+        emocion: emocion,
+        observacion: observacion
+      };
+
+      boton.disabled = true;
+      boton.textContent = 'GUARDANDO...';
+
+      mensaje.className = 'mensaje';
+      mensaje.textContent = '';
+
+      try {
+
+        await fetch(SCRIPT_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: {
+            'Content-Type': 'text/plain;charset=utf-8'
+          },
+          body: JSON.stringify(datos)
+        });
+
+        mensaje.className = 'mensaje ok';
+        mensaje.textContent = 'Solicitud enviada. Revisa tu Google Sheets para confirmar que el registro quedó guardado.';
+
+        document.getElementById('formEmocion').reset();
+
+      } catch (error) {
+
+        console.error('Error al enviar el registro:', error);
+
+        mensaje.className = 'mensaje error';
+        mensaje.textContent = 'No se pudo enviar el registro. Revisa tu conexión e inténtalo de nuevo.';
+
+      } finally {
+
+        boton.disabled = false;
+        boton.textContent = 'GUARDAR REGISTRO';
+
+      }
+
+    });
+
+  </script>
+
+</body>
+</html>
